@@ -341,6 +341,9 @@ FROM [SQL Practice].dbo.EmployeeDemographics
 SELECT Avg(Age) AS AvgAge
 FROM [SQL Practice].dbo.EmployeeDemographics
 
+SELECT Avg(Salary) AS AvgSalary
+FROM [SQL Practice].dbo.EmployeeSalary
+
 SELECT Demo.EmployeeID, Sal.Salary
 FROM [SQL Practice].[dbo].[EmployeeDemographics] AS Demo
 JOIN [SQL Practice].[dbo].[EmployeeSalary] AS Sal
