@@ -365,7 +365,172 @@ JOIN [SQL Practice].dbo.EmployeeSalary sal
 ON dem.EmployeeID = sal.EmployeeID
 
 
+/*
+CTEs
+*/
+
+WITH CTE_Employee as
+(SELECT FirstName, LastName, Gender, Salary
+, COUNT(gender) OVER (PARTITION BY Gender) as TotalGender
+, AVG(Salary) OVER (PARTITION BY Gender) as AvgSalary
+FROM [SQL Practice].dbo.EmployeeDemographics emp
+JOIN [SQL Practice].dbo.EmployeeSalary sal
+ON emp.EmployeeID = sal.EmployeeID
+WHERE Salary > '45000'
+)
+SELECT *
+FROM CTE_Employee
+
+/*
+Temp Tables
+*/
+
+CREATE TABLE #temp_Employee (
+EmployeeID int,
+JobTitle varchar(100),
+Salary int
+)
+
+SELECT *
+FROM #temp_Employee
+
+INSERT INTO #temp_Employee VALUES (
+1001, 'HR', 45000
+)
+
+INSERT INTO #temp_Employee
+SELECT *
+FROM [SQL Practice].dbo.EmployeeSalary
+
+DROP TABLE IF EXISTS #temp_Employee
+CREATE TABLE #Temp_Employee2 (
+JobTitle varchar(50),
+EmployeesPerJob int,
+AvgAge int,
+AvgSalary int)
+
+INSERT INTO #Temp_Employee2
+SELECT JobTitle, Count(JobTitle), Avg(Age), Avg(Salary)
+FROM [SQL Practice].dbo.EmployeeDemographics emp
+JOIN [SQL Practice].dbo.EmployeeSalary sal
+ON emp.EmployeeID = sal.EmployeeID
+Group By JobTitle
+
+SELECT *
+FROM #Temp_Employee2
+
+/*
+TRIM, LTRIM, RTRIM, Replace, Substring, Upper, Lower
+*/
+--Drop Table EmployeeErrors;
+
+DROP TABLE IF EXISTS EmployeeErrors
+CREATE TABLE EmployeeErrors (
+EmployeeID varchar(50)
+,FirstName varchar(50)
+,LastName varchar(50)
+)
 
 
+Insert into EmployeeErrors Values
+('1001 ', 'Jimbo', 'Halbert')
+,(' 1002', 'Pamela', 'Beasely')
+,('1005', 'TOby', 'Flenderson - Fired')
+
+Select *
+FROM EmployeeErrors
+
+-- Using Trim, LTRIM, RTRIM
+
+Select EmployeeID, TRIM(EmployeeID) as IDTRIM
+FROM EmployeeErrors
+
+Select EmployeeID, LTRIM(EmployeeID) as IDTRIM
+FROM EmployeeErrors
+
+Select EmployeeID, RTRIM(EmployeeID) as IDTRIM
+FROM EmployeeErrors
+
+-- Using Replace
+
+Select LastName, REPLACE(LastName, '-Fired','') as LastNameFixed
+FROM EmployeeErrors
+
+-- Using Substring
+
+Select err.FirstName, SUBSTRING(err.FirstName,1,3), dem.FirstName, SUBSTRING(dem.FirstName,1,3)
+FROM EmployeeErrors err
+JOIN EmployeeDemographics dem
+ON SUBSTRING(err.FirstName,1,3) = SUBSTRING(dem.FirstName,1,3)
+
+-- Using Upper and Lower
+Select FirstName, LOWER(FirstName)
+FROM EmployeeErrors
+
+Select FirstName, UPPER(FirstName)
+FROM EmployeeErrors
+
+/*
+Stored Procedures
+*/
+
+CREATE PROCEDURE TEST
+AS
+Select *
+FROM EmployeeDemographics
+
+EXEC TEST
+
+CREATE PROCEDURE Temp_Employee
+AS
+DROP TABLE IF EXISTS #temp_Employee
+Create table #temp_employee (
+JobTitle varchar(100),
+EmployeesPerJob int,
+AvgAge int,
+AvgSalary int
+)
+
+Insert into #temp_employee
+SELECT JobTitle, Count(JobTitle), Avg(Age), AVG(salary)
+FROM [SQL Practice]..EmployeeDemographics emp
+JOIN [SQL Practice]..EmployeeSalary sal
+ON emp.EmployeeID = Sal.EmployeeID
+group by JobTitle
+
+Select *
+From #temp_employee
+
+EXEC Temp_Employee @JobTitle = 'Salesman'
 
 
+/*
+Subqueries (in the Select, From, and Where Statement)
+*/
+
+Select *
+From EmployeeSalary
+
+-- Subquery in Select
+Select EmployeeID, Salary, (Select AVG(Salary) From EmployeeSalary) as AllAvgSalary
+From EmployeeSalary
+
+-- How to do it with Partition By
+
+Select EmployeeID, Salary, AVG(Salary) over () as AllAvgSalary
+From EmployeeSalary
+
+-- Subquery in From
+
+Select a.EmployeeID, AllAvgSalary
+From (Select EmployeeID, Salary, AVG(Salary) over () as AllAvgSalary
+From EmployeeSalary) a
+
+-- Subquery in Where
+
+Select EmployeeID, JobTitle, Salary
+From EmployeeSalary
+Where EmployeeID in (
+Select EmployeeID
+From EmployeeDemographics
+Where Age > 30)
